@@ -3,6 +3,7 @@ package com.ucsdextandroid1.musicsearch2.player;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Binder;
 import android.os.IBinder;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,6 +27,7 @@ public class MusicPlayerService extends Service {
     private static final String ACTION_STOP = "musicsearch.stop";
 
     @Nullable private MusicPlayer musicPlayer;
+    private int musicPlayerState = MusicPlayer.STATE_STOPPED;
 
     private static Intent createIntent(Context context, String action) {
         Intent intent = new Intent(context, MusicPlayerService.class);
@@ -102,6 +104,8 @@ public class MusicPlayerService extends Service {
 
                 @Override
                 public void onStateChanged(int state) {
+
+                    musicPlayerState = state;
                     Intent intent = new Intent(ACTION_STATE_CHANGED);
                     intent.putExtra(EXTRA_SONG, musicPlayer.getCurrentSongItem());
                     intent.putExtra(EXTRA_PLAYBACK_STATE, state);
@@ -154,12 +158,25 @@ public class MusicPlayerService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         //not used for now
-        return null;
+        return new MusicPlayerServiceBinder();
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
         //not used for now
         return super.onUnbind(intent);
+    }
+    public int getCurrentState(){
+        return musicPlayerState;
+    }
+    public SongItem getCurrentSong(){
+        return musicPlayer != null ? musicPlayer.getCurrentSongItem() : null;
+    }
+    public class MusicPlayerServiceBinder extends Binder {
+
+        public MusicPlayerService getService(){
+            return MusicPlayerService.this;
+        }
+
     }
 }

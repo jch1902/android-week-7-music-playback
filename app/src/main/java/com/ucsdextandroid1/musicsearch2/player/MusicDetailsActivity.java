@@ -6,10 +6,13 @@ import androidx.lifecycle.Observer;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.View;
 
 import com.ucsdextandroid1.musicsearch2.R;
@@ -82,6 +85,7 @@ public class MusicDetailsActivity extends AppCompatActivity {
         });
 
         registerBroadcastReceiver();
+        bindToService();
     }
 
     private void registerBroadcastReceiver() {
@@ -110,11 +114,33 @@ public class MusicDetailsActivity extends AppCompatActivity {
         }
 
     };
+    private void bindToService(){
+        Intent intent = new Intent(this, MusicPlayerService.class);
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    private void unbindFromService(){
+        unbindService(serviceConnection);
+    }
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MusicPlayerService playerService = ((MusicPlayerService.MusicPlayerServiceBinder) service).getService();
+            musicControls.updateViewMetadata(playerService.getCurrentSong());
+            musicControls.updateViewState(playerService.getCurrentState());
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
 
         unregisterBroadcastReceiver();
+        unbindFromService();
     }
 }
