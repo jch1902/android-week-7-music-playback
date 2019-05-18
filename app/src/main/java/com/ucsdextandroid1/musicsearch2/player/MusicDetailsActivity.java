@@ -23,6 +23,11 @@ public class MusicDetailsActivity extends AppCompatActivity {
     public static Intent createIntent(Context context) {
         //TODO add the song the intent
         return new Intent(context, MusicDetailsActivity.class);
+//        Intent intent = new Intent(context, MusicDetailsActivity.class);
+//
+//        intent.putExtra(MusicPlayerService.EXTRA_PLAYBACK_STATE, state);
+//        intent.putExtra(MusicPlayerService.EXTRA_SONG, currentSong);
+//        return intent;
     }
 
     @Override
@@ -38,6 +43,8 @@ public class MusicDetailsActivity extends AppCompatActivity {
             }
         });
 
+//        int startingState = getIntent().getIntExtra(MusicPlayerService.EXTRA_PLAYBACK_STATE, MusicPlayer.STATE_STOPPED);
+//        SongItem startingSong = getIntent().getParcelableExtra(MusicPlayerService.EXTRA_SONG);
         musicControls = MusicControlsManager.newUIBuilder()
                 .setLoadingView(findViewById(R.id.amd_loading_view))
                 .setImageView(findViewById(R.id.amd_image))
@@ -49,6 +56,9 @@ public class MusicDetailsActivity extends AppCompatActivity {
                         R.drawable.ic_pause_circle_filled
                 ).build();
 
+
+//        musicControls.updateViewState(startingState);
+//        musicControls.updateViewMetadata(startingSong);
         musicControls.setControlsClickListener(new MusicControlsManager.OnControlClickListener() {
             @Override
             public void onResumeClicked() {
