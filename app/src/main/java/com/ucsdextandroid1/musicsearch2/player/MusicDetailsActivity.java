@@ -3,12 +3,17 @@ package com.ucsdextandroid1.musicsearch2.player;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.Observer;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.view.View;
 
 import com.ucsdextandroid1.musicsearch2.R;
+import com.ucsdextandroid1.musicsearch2.data.SongItem;
 
 public class MusicDetailsActivity extends AppCompatActivity {
 
@@ -47,28 +52,59 @@ public class MusicDetailsActivity extends AppCompatActivity {
         musicControls.setControlsClickListener(new MusicControlsManager.OnControlClickListener() {
             @Override
             public void onResumeClicked() {
-//                MusicPlayerService.resume(MusicDetailsActivity.this);
+                MusicPlayerService.resume(MusicDetailsActivity.this);
             }
 
             @Override
             public void onPauseClicked() {
-//                MusicPlayerService.pause(MusicDetailsActivity.this);
+                MusicPlayerService.pause(MusicDetailsActivity.this);
             }
         });
 
-//        MusicController.getInstance().getMetadataAndStateLiveData().observe(this, new Observer<MusicMetadataAndState>() {
-//            @Override
-//            public void onChanged(MusicMetadataAndState metadataAndState) {
-//                musicControls.updateViewState(metadataAndState.getState());
-//                musicControls.updateViewMetadata(metadataAndState.getMetadata());
-//
-//                toolbar.setTitle(metadataAndState.getMetadata() != null ? metadataAndState.getMetadata().getAlbumName() : "");
-//            }
-//        });
+        MusicController.getInstance().getMetadataAndStateLiveData().observe(this, new Observer<MusicMetadataAndState>() {
+            @Override
+            public void onChanged(MusicMetadataAndState metadataAndState) {
+                musicControls.updateViewState(metadataAndState.getState());
+                musicControls.updateViewMetadata(metadataAndState.getMetadata());
+
+                toolbar.setTitle(metadataAndState.getMetadata() != null ? metadataAndState.getMetadata().getAlbumName() : "");
+            }
+        });
+
+        registerBroadcastReceiver();
     }
+
+    private void registerBroadcastReceiver() {
+        LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(this);
+        broadcastManager.registerReceiver(controlsBroadcastReceiver,
+                new IntentFilter(MusicPlayerService.ACTION_STATE_CHANGED));
+    }
+
+    private void unregisterBroadcastReceiver() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(controlsBroadcastReceiver);
+    }
+
+    private BroadcastReceiver controlsBroadcastReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent.getAction() != null && MusicPlayerService.ACTION_STATE_CHANGED.equals(intent.getAction())) {
+                int state = intent.getIntExtra(MusicPlayerService.EXTRA_PLAYBACK_STATE, MusicPlayer.STATE_STOPPED);
+                SongItem item = intent.getParcelableExtra(MusicPlayerService.EXTRA_SONG);
+
+                if(musicControls != null) {
+                    musicControls.updateViewState(state);
+                    musicControls.updateViewMetadata(item);
+                }
+            }
+        }
+
+    };
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        unregisterBroadcastReceiver();
     }
 }
